@@ -50,6 +50,9 @@ def read_text_for_audio(audio_path):
     return ""  # ни один файл не найден
 def select_ref_audio(audio_path):
     return read_text_for_audio(os.path.join(REF_DIR, audio_path))
+def select_custom_audio(audio_path):
+    return read_text_for_audio(os.path.join(CUSTOM_DIR, audio_path))
+
 REFERENCE_TXT = read_text_for_audio(os.path.join(REF_DIR, REFERENCE[0]))
 CUSTOM_TXT = read_text_for_audio(os.path.join(CUSTOM_DIR, CUSTOM_VOICE[0]))
 def toggle_voice_audio(selected_file, voice_mode):
@@ -138,7 +141,6 @@ def upload_reference_audio_endpoint(files):
     ref_path = CUSTOM_DIR
     uploaded_filenames = []
     errors = []
-    print("Files:-------------------------------------", files)
     for file_info in files:
         if not file_info:
             continue
@@ -147,7 +149,6 @@ def upload_reference_audio_endpoint(files):
         filename = os.path.basename(file_info)
         safe_filename = sanitize_filename(filename)
         destination_path = os.path.join(ref_path,safe_filename)
-        print('zzzzzzzzzzzzzzzzzzz',file_info,destination_path)
         try:
             if os.path.exists(destination_path):
                 print(f"File '{safe_filename}' already exists.")
@@ -157,18 +158,6 @@ def upload_reference_audio_endpoint(files):
             # Copy file
             shutil.copy2(file_info, destination_path)
             print(f"Saved uploaded file to: {destination_path}")
-            
-            # Validate
-#            max_duration = config_manager.get_int(
-#                "audio_output.max_reference_duration_sec", 600
-#            )
-#            is_valid, validation_msg = utils.validate_reference_audio(
-#                destination_path, max_duration
-#            )
-#            if not is_valid:
-#                destination_path.unlink(missing_ok=True)
-#                errors.append({"filename": safe_filename, "error": validation_msg})
-#            else:
             uploaded_filenames.append(safe_filename)
                 
         except Exception as e:
@@ -515,6 +504,10 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
                             inputs=[custom_upload_btn],
                             outputs=[custom_ref_audio_drop]
                             )
+                        custom_ref_audio_drop.change(
+                            fn=select_custom_audio,
+                            inputs=[custom_ref_audio_drop],
+                            outputs=[custom_ref_text_drop]
                     with gr.Column(scale=2):
                         clone_target_text = gr.Textbox(
                             label="Target Text (Text to synthesize with cloned voice)",
