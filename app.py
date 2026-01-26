@@ -268,7 +268,8 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
                                 label="Reference Text",
                                 lines=5,
                                 value=REFERENCE_TXT,
-                                autoscroll=False
+                                autoscroll=False,
+                                max_lines=5
                             )
                         clone_ref_audio_drop.change(
                             fn=select_ref_audio,
