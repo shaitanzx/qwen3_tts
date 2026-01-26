@@ -42,7 +42,7 @@ def read_text_for_audio(audio_path):
     return ""  # ни один файл не найден
 def select_ref_audio(audio_path):
     return read_text_for_audio(os.path.join(REF_DIR, audio_path))
-REFERENCE_TXT = read_text_for_audio(os.path.join(REF_DIR, REFERENCE[0]))
+#REFERENCE_TXT = read_text_for_audio(os.path.join(REF_DIR, REFERENCE[0]))
 def get_model_path(model_type: str, model_size: str) -> str:
     """Get model path based on type and size."""
     return snapshot_download(f"Qwen/Qwen3-TTS-12Hz-{model_size}-{model_type}")
@@ -266,8 +266,7 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
                             )
                         clone_ref_text_drop= gr.Textbox(
                                 label="Reference Text",
-                                lines=1,
-                                value=REFERENCE_TXT
+                                lines=1
                             )
                         clone_ref_audio_drop.change(
                             fn=select_ref_audio,
