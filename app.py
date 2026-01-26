@@ -258,6 +258,7 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
                 def select_ref_audio(audio_file):
                     if audio_file:
                         audio_path = os.path.join(ROOT,"reference", audio_file)
+                        print('++++++++++++++++++++',audio_file)
                         base_name = os.path.splitext(audio_file)[0]
                 
                         text_content = ""
