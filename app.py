@@ -297,7 +297,6 @@ def generate_voice_clone(voice_mode_radio, clone_ref_audio_drop, clone_ref_text_
         ref_text=custom_ref_text_drop
         use_xvector_only=custom_xvector
         path='custom'
-    print('aaaaaaaaaaaaaaaaaaaaaaaaaaaa',os.path.join(ROOT,path,audio))
     wav, sr = librosa.load(os.path.join(ROOT,path,audio), sr=None)
     ref_audio = {"sampling_rate": sr, "data": wav}
 
@@ -502,7 +501,7 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
 #                        )
 
                         pre_player = gr.Audio(
-                            visible=False,
+                            visible=True,
                             label="",
                             interactive=False,
                             show_label=True,
