@@ -10,9 +10,10 @@ os.makedirs(os.environ["HF_HOME"], exist_ok=True)
 import gradio as gr
 import numpy as np
 import torch
+import shutil
 from huggingface_hub import snapshot_download
 
-from huggingface_hub import login
+#from huggingface_hub import login
 HF_TOKEN = os.environ.get('HF_TOKEN')
 #login(token=HF_TOKEN)
 
@@ -59,12 +60,6 @@ def toggle_voice_audio(selected_file, voice_mode):
         base_path = CUSTOM_DIR
     
     file_path = os.path.join(base_path,selected_file)
-   
-    
-    #if not file_path.exists():
-    #    gr.Error(f"❌ File not found: {selected_file}")
-    #    return None, "▶️ Play/Stop", gr.update(visible=False), gr.update(visible=False)
-    
     current_key = f"{voice_mode}_{selected_file}"
     
     if reference_playing_state["is_playing"] and reference_playing_state["current_key"] == current_key:
@@ -76,12 +71,134 @@ def toggle_voice_audio(selected_file, voice_mode):
     gr.Info(f"🎵 Playing: {selected_file}")
     
     return str(file_path)  
-    
-#def reset_playback_on_mode_change(voice_mode):
+def sanitize_filename(filename):
+    """
+    Removes potentially unsafe characters and path components from a filename
+    to make it safe for use in file paths. Replaces unsafe sequences with underscores.
 
-#    global reference_playing_state
-#    reference_playing_state = {"is_playing": False, "current_key": None}
-#    return "▶️ Play/Stop", "▶️ Play/Stop", gr.update(visible=False)
+    Args:
+        filename: The original filename string.
+
+    Returns:
+        A sanitized filename string, ensuring it's not empty and reasonably short.
+    """
+    if not filename:
+        # Generate a unique name if the input is empty.
+        return f"unnamed_file_{uuid.uuid4().hex[:8]}"
+
+    # Remove directory separators and leading/trailing whitespace.
+    base_filename = Path(filename).name.strip()
+    if not base_filename:
+        return f"empty_basename_{uuid.uuid4().hex[:8]}"
+
+    # Define a set of allowed characters (alphanumeric, underscore, hyphen, dot, space).
+    # Spaces will be replaced by underscores later.
+    safe_chars = set(
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._- "
+    )
+    sanitized_list = []
+    last_char_was_underscore = False
+
+    for char in base_filename:
+        if char in safe_chars:
+            # Replace spaces with underscores.
+            sanitized_list.append("_" if char == " " else char)
+            last_char_was_underscore = char == " "
+        elif not last_char_was_underscore:
+            # Replace any disallowed character sequence with a single underscore.
+            sanitized_list.append("_")
+            last_char_was_underscore = True
+
+    sanitized = "".join(sanitized_list).strip("_")
+
+    # Prevent names starting with multiple dots or consisting only of dots/underscores.
+    if not sanitized or sanitized.lstrip("._") == "":
+        return f"sanitized_file_{uuid.uuid4().hex[:8]}"
+
+    # Limit filename length (e.g., 100 characters), preserving the extension.
+    max_len = 100
+    if len(sanitized) > max_len:
+        name_part, ext_part = os.path.splitext(sanitized)
+        # Ensure extension is not overly long itself; common extensions are short.
+        ext_part = ext_part[:10]  # Limit extension length just in case.
+        name_part = name_part[
+            : max_len - len(ext_part) - 1
+        ]  # -1 for the dot if ext exists
+        sanitized = name_part + ext_part
+        logger.warning(
+            f"Original filename '{base_filename}' was truncated to '{sanitized}' due to length limits."
+        )
+
+    if not sanitized:  # Should not happen with previous checks, but as a failsafe.
+        return f"final_fallback_name_{uuid.uuid4().hex[:8]}"
+
+    return sanitized
+def upload_reference_audio_endpoint(files):
+    # upload reference audio
+    ref_path = REF_DIR
+    uploaded_filenames = []
+    errors = []
+    
+    for file_info in files:
+        if not file_info:
+            continue
+            
+        # Extract filename from Gradio file object
+        filename = os.path.basename(file_info)
+        safe_filename = utils.sanitize_filename(filename)
+        destination_path = os.path.join(ref_path,safe_filename)
+        
+        try:
+            if destination_path.exists():
+                logger.info(f"File '{safe_filename}' already exists.")
+                uploaded_filenames.append(safe_filename)
+                continue
+            
+            # Copy file
+            shutil.copy2(file_info, destination_path)
+            logger.info(f"Saved uploaded file to: {destination_path}")
+            
+            # Validate
+#            max_duration = config_manager.get_int(
+#                "audio_output.max_reference_duration_sec", 600
+#            )
+#            is_valid, validation_msg = utils.validate_reference_audio(
+#                destination_path, max_duration
+#            )
+#            if not is_valid:
+#                destination_path.unlink(missing_ok=True)
+#                errors.append({"filename": safe_filename, "error": validation_msg})
+#            else:
+            uploaded_filenames.append(safe_filename)
+                
+        except Exception as e:
+            errors.append({"filename": filename, "error": str(e)})
+    
+    all_files = sorted([f for f in os.listdir("custom") if f.lower().endswith(('.wav', '.mp3'))]) or [""]
+    return {
+        "message": f"Processed {len(files)} file(s)",
+        "uploaded_files": uploaded_filenames,
+        "all_reference_files": all_files,
+        "errors": errors
+    }
+
+def on_reference_upload(files):
+    try:
+        result =  upload_reference_audio_endpoint(files)
+        all_files = result.get("all_reference_files", [])
+        uploaded_files = result.get("uploaded_files", [])
+        
+        if uploaded_files:
+            default_selection = uploaded_files[0] if uploaded_files else "none"
+            updated_options = all_files
+            
+            return gr.update(choices=updated_options,value=default_selection),gr.update(choices=updated_options)
+        else:
+            return gr.update(choices=all_files))
+            
+    except Exception as e:
+        logger.error(f"Error in reference upload: {e}", exc_info=True)
+        return populateReferenceFiles(), show_notification(f"❌ Upload failed: {str(e)}", "error")
 
 def get_model_path(model_type: str, model_size: str) -> str:
     """Get model path based on type and size."""
@@ -383,10 +500,6 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
                             elem_id="reference-audio-player",
                             autoplay=True  
                             )  
-                        #reference_audio_trigger = gr.Audio(
-                        #    visible=False,
-                        #    elem_id="reference-audio-trigger"
-                        #    )
                         ref_play_btn.click(
                             fn=lambda file: toggle_voice_audio(file, "reference"),
                             inputs=[clone_ref_audio_drop],
@@ -397,7 +510,11 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
                             inputs=[custom_ref_audio_drop],
                             outputs=[pre_player]
                             )
-                
+                        custom_upload_btn.upload(
+                            fn=on_reference_upload,
+                            inputs=[custom_upload_btn],
+                            outputs=[custom_ref_audio_drop]
+                            )
                     with gr.Column(scale=2):
                         clone_target_text = gr.Textbox(
                             label="Target Text (Text to synthesize with cloned voice)",
