@@ -287,7 +287,7 @@ def generate_voice_design(text, language, voice_description):
 
 def generate_voice_clone(voice_mode_radio, clone_ref_audio_drop, clone_ref_text_drop, clone_xvector,  
         custom_ref_audio_drop, custom_ref_text_drop,custom_xvector,target_text, language, model_size):
-
+    print(voice_mode_radio)
     if voice_mode_radio == 'predefine':
         audio=clone_ref_audio_drop
         ref_text=clone_ref_text_drop
