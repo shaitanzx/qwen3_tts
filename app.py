@@ -69,12 +69,16 @@ def toggle_voice_audio(selected_file, voice_mode):
     if reference_playing_state["is_playing"] and reference_playing_state["current_key"] == current_key:
         reference_playing_state = {"is_playing": False, "current_key": None}
         gr.Info(f"⏸️ Stopped: {selected_file}")
-        return gr.update(visible=False),None,gr.update(autoplay=True) 
+        return return None, "▶️ Play/Stop", gr.update(visible=False), gr.update(visible=False)
 
     reference_playing_state = {"is_playing": True, "current_key": current_key}
     gr.Info(f"🎵 Playing: {selected_file}")
     
-    return gr.update(visible=False),str(file_path),gr.update(autoplay=True)  
+    return (
+        str(file_path), 
+        "⏸️ Play/Stop", 
+        gr.update(visible=True),  
+        gr.update(value=str(file_path), autoplay=True) )  
 def sanitize_filename(filename):
     """
     Removes potentially unsafe characters and path components from a filename
@@ -504,14 +508,18 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
                             visible=False,
                             label="",
                             interactive=False,
-                            show_label=True,
+                            show_label=False,
                             elem_id="reference-audio-player",
-                            autoplay=True  
+                            autoplay=False  
+                            )
+                        pre_player_trigger = gr.Audio(
+                            visible=False,
+                            elem_id="reference-audio-trigger"
                             )  
                         ref_play_btn.click(
                             fn=lambda file: toggle_voice_audio(file, "reference"),
                             inputs=[clone_ref_audio_drop],
-                            outputs=[pre_player,pre_player,pre_player]
+                            outputs=[pre_player,ref_play_btn,pre_player,pre_player]
                             )
                         custom_play_btn.click(
                             fn=lambda file: toggle_voice_audio(file, "custom"),
