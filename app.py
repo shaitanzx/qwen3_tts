@@ -299,12 +299,7 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
                                 value="Auto",
                                 interactive=True,
                             )
-                            clone_model_size = gr.Dropdown(
-                                label="Model Size",
-                                choices=MODEL_SIZES,
-                                value="1.7B",
-                                interactive=True,
-                            )
+
                         clone_btn = gr.Button("Clone & Generate", variant="primary")
 
                 with gr.Row():
