@@ -69,12 +69,12 @@ def toggle_voice_audio(selected_file, voice_mode):
     if reference_playing_state["is_playing"] and reference_playing_state["current_key"] == current_key:
         reference_playing_state = {"is_playing": False, "current_key": None}
         gr.Info(f"⏸️ Stopped: {selected_file}")
-        return gr.update(visible=True),None,gr.update(visible=False) 
+        return gr.update(visible=False),None,gr.update(autoplay=True) 
 
     reference_playing_state = {"is_playing": True, "current_key": current_key}
     gr.Info(f"🎵 Playing: {selected_file}")
     
-    return gr.update(visible=True),str(file_path),gr.update(visible=False)  
+    return gr.update(visible=False),str(file_path),gr.update(autoplay=True)  
 def sanitize_filename(filename):
     """
     Removes potentially unsafe characters and path components from a filename
