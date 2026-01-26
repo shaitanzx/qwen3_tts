@@ -24,7 +24,7 @@ MODEL_SIZES = ["0.6B", "1.7B"]
 REFERENCE = sorted([f for f in os.listdir("reference") if f.lower().endswith(('.wav', '.mp3'))])
 REF_DIR = os.path.join(ROOT, "reference")
 os.makedirs( os.path.join(ROOT, "custom"), exist_ok=True)
-CUSTOM_VOICE = sorted([f for f in os.listdir("custom") if f.lower().endswith(('.wav', '.mp3'))])
+CUSTOM_VOICE = sorted([f for f in os.listdir("custom") if f.lower().endswith(('.wav', '.mp3'))]) or [""]
 CUSTOM_DIR = os.path.join(ROOT, "custom")
 def change_voice_mode(voice_mode):
     return (
