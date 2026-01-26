@@ -23,6 +23,11 @@ loaded_models = {}
 MODEL_SIZES = ["0.6B", "1.7B"]
 REFERENCE = sorted([f for f in os.listdir("reference") if f.lower().endswith(('.wav', '.mp3'))])
 REF_DIR = os.path.join(ROOT, "reference")
+def toggleVoiceOptionsDisplay(voice_mode):
+    return (
+        gr.update(visible=(voice_mode == "predefined")),
+        gr.update(visible=(voice_mode == "custom"))
+    )
 def read_text_for_audio(audio_path):
     """
     Ищет файл с тем же именем, что и audio_path, но с расширением .txt или .lab.
@@ -258,18 +263,43 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
                 gr.Markdown("### Clone Voice from Reference Audio")
                 with gr.Row():
                     with gr.Column(scale=2):
-                        clone_ref_audio_drop = gr.Dropdown ( 
+                        voice_mode_radio = gr.Radio(
+                            choices=["predefined", "custom"],
+                            value="predefined",
+                            label="Select Voice Mode"
+                            )
+                        with gr.Group(visible=True) as ref_group:
+                            clone_ref_audio_drop = gr.Dropdown ( 
                                 label="Reference Audio",
                                 choices=REFERENCE,
                                 value=REFERENCE[0],
                                 interactive=True,
                             )
-                        clone_ref_text_drop= gr.Textbox(
+                            clone_ref_text_drop= gr.Textbox(
                                 label="Reference Text",
                                 lines=5,
                                 value=REFERENCE_TXT,
                                 autoscroll=False,
                                 max_lines=5
+                            )
+                        with gr.Group(visible=False) as custom_group:
+                            custom_ref_audio_drop = gr.Dropdown ( 
+                                label="Custom Audio",
+                                choices=REFERENCE,
+                                value=REFERENCE[0],
+                                interactive=True
+                            )
+                            custom_ref_text_drop= gr.Textbox(
+                                label="Custom Text",
+                                lines=5,
+                                value=REFERENCE_TXT,
+                                autoscroll=False,
+                                max_lines=5
+                            )
+                        voice_mode_radio.change(
+                            fn=change_voice_mode,
+                            inputs=[voice_mode_radio],
+                            outputs=[ref_group, custom_group]
                             )
                         clone_ref_audio_drop.change(
                             fn=select_ref_audio,
