@@ -135,7 +135,7 @@ def sanitize_filename(filename):
     return sanitized
 def upload_reference_audio_endpoint(files):
     # upload reference audio
-    ref_path = REF_DIR
+    ref_path = CUSTOM_DIR
     uploaded_filenames = []
     errors = []
     
@@ -150,13 +150,13 @@ def upload_reference_audio_endpoint(files):
         print('zzzzzzzzzzzzzzzzzzz',destination_path)
         try:
             if destination_path.exists():
-                logger.info(f"File '{safe_filename}' already exists.")
+                print(f"File '{safe_filename}' already exists.")
                 uploaded_filenames.append(safe_filename)
                 continue
             
             # Copy file
             shutil.copy2(file_info, destination_path)
-            logger.info(f"Saved uploaded file to: {destination_path}")
+            print(f"Saved uploaded file to: {destination_path}")
             
             # Validate
 #            max_duration = config_manager.get_int(
