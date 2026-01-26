@@ -192,9 +192,9 @@ def on_reference_upload(files):
             default_selection = uploaded_files[0] if uploaded_files else "none"
             updated_options = all_files
             
-            return gr.update(choices=updated_options,value=default_selection),gr.update(choices=updated_options)
+            return gr.update(choices=updated_options,value=default_selection)
         else:
-            return gr.update(choices=all_files))
+            return gr.update(choices=all_files)
             
     except Exception as e:
         logger.error(f"Error in reference upload: {e}", exc_info=True)
