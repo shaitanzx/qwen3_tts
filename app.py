@@ -4,8 +4,8 @@
 #import subprocess
 #subprocess.run('pip install flash-attn==2.7.4.post1', shell=True)
 import os
-root = os.path.dirname(os.path.abspath(__file__))
-os.environ["HF_HOME"] = os.path.join(root, "model")
+ROOT = os.path.dirname(os.path.abspath(__file__))
+os.environ["HF_HOME"] = os.path.join(ROOT, "model")
 os.makedirs(os.environ["HF_HOME"], exist_ok=True)
 import gradio as gr
 import numpy as np
@@ -22,13 +22,13 @@ loaded_models = {}
 # Model size options
 MODEL_SIZES = ["0.6B", "1.7B"]
 REFERENCE = sorted([f for f in os.listdir("reference") if f.lower().endswith(('.wav', '.mp3'))])
+REF_DIR = os.path.join(ROOT, "reference")
 def read_text_for_audio(audio_path):
     """
     Ищет файл с тем же именем, что и audio_path, но с расширением .txt или .lab.
     Возвращает содержимое первого найденного файла или пустую строку.
     """
     base = os.path.splitext(audio_path)[0]
-    print('---------------------',base)
     for ext in ['.txt', '.lab']:
         text_path = base + ext
         if os.path.exists(text_path):
@@ -40,7 +40,7 @@ def read_text_for_audio(audio_path):
                 return ""
     return ""  # ни один файл не найден
 def select_ref_audio(audio_path):
-    return read_text_for_audio(audio_path)
+    return read_text_for_audio(os.path.join(REF_DIR, audio_path)
 REFERENCE_TXT = read_text_for_audio(REFERENCE[0])
 def get_model_path(model_type: str, model_size: str) -> str:
     """Get model path based on type and size."""
