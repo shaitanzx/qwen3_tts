@@ -51,7 +51,7 @@ def select_ref_audio(audio_path):
     return read_text_for_audio(os.path.join(REF_DIR, audio_path))
 REFERENCE_TXT = read_text_for_audio(os.path.join(REF_DIR, REFERENCE[0]))
 CUSTOM_TXT = read_text_for_audio(os.path.join(CUSTOM_DIR, CUSTOM_VOICE[0]))
-def toggle_voice_audio(selected_file: str, voice_mode: str) -> Tuple[Optional[str], str, Dict, Dict]:
+def toggle_voice_audio(selected_file, voice_mode):
     global reference_playing_state
     if not selected_file:
         gr.Warning("⚠️ Please select a file")
