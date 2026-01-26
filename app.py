@@ -506,11 +506,11 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
 #                        )
                         with gr.Row(elem_id="audio-player-container"):
                             pre_player = gr.Audio(
-                                visible=False,
+                                visible=True,
                                 label="",
                                 interactive=False,
                                 show_label=False,
-                                autoplay=False  
+                                autoplay=True  
                                 ) 
                         ref_play_btn.click(
                             fn=lambda file: toggle_voice_audio(file, "reference"),
