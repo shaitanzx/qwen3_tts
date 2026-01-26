@@ -23,7 +23,7 @@ loaded_models = {}
 MODEL_SIZES = ["0.6B", "1.7B"]
 REFERENCE = sorted([f for f in os.listdir("reference") if f.lower().endswith(('.wav', '.mp3'))])
 REF_DIR = os.path.join(ROOT, "reference")
-def toggleVoiceOptionsDisplay(voice_mode):
+def change_voice_mode(voice_mode):
     return (
         gr.update(visible=(voice_mode == "predefined")),
         gr.update(visible=(voice_mode == "custom"))
