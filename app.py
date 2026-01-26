@@ -508,6 +508,7 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
                             fn=select_custom_audio,
                             inputs=[custom_ref_audio_drop],
                             outputs=[custom_ref_text_drop]
+                            )
                     with gr.Column(scale=2):
                         clone_target_text = gr.Textbox(
                             label="Target Text (Text to synthesize with cloned voice)",
