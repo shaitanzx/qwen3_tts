@@ -394,7 +394,7 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
                             )
                         custom_play_btn.click(
                             fn=lambda file: toggle_voice_audio(file, "custom"),
-                            inputs=[clone_ref_audio_drop],
+                            inputs=[custom_ref_audio_drop],
                             outputs=[pre_player]
                             )
                 
