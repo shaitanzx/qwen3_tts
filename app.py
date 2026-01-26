@@ -77,7 +77,7 @@ def toggle_voice_audio(selected_file, voice_mode):
     return (
         str(file_path), 
         "⏸️ Play/Stop", 
-        gr.update(visible=False),  
+        gr.update(visible=True),  
         gr.update(value=str(file_path), autoplay=True) )  
 def sanitize_filename(filename):
     """
@@ -359,12 +359,13 @@ def build_ui():
         font=[gr.themes.GoogleFont("Source Sans Pro"), "Arial", "sans-serif"],
     )
 
-#    css = """
-#    .gradio-container {max-width: none !important;}
-#    .tab-content {padding: 20px;}
-#    """
+    css = """
+    #audio-player-container {
+        display: none !important;
+    }
+    """
 
-    with gr.Blocks(title="Qwen3-TTS") as demo:
+    with gr.Blocks(title="Qwen3-TTS",css=css) as demo:
         demo.load(
             None,
             None,
@@ -503,19 +504,14 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
 #                            label="Use x-vector only (No reference text needed, but lower quality)",
 #                            value=False,
 #                        )
-
-                        pre_player = gr.Audio(
-                            visible=False,
-                            label="",
-                            interactive=False,
-                            show_label=False,
-                            elem_id="reference-audio-player",
-                            autoplay=False  
-                            )
-                        pre_player_trigger = gr.Audio(
-                            visible=False,
-                            elem_id="reference-audio-trigger"
-                            )  
+                        with gr.Row(elem_id="audio-player-container"):
+                            pre_player = gr.Audio(
+                                visible=False,
+                                label="",
+                                interactive=False,
+                                show_label=False,
+                                autoplay=False  
+                                ) 
                         ref_play_btn.click(
                             fn=lambda file: toggle_voice_audio(file, "reference"),
                             inputs=[clone_ref_audio_drop],
