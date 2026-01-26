@@ -145,7 +145,7 @@ def upload_reference_audio_endpoint(files):
             
         # Extract filename from Gradio file object
         filename = os.path.basename(file_info)
-        safe_filename = utils.sanitize_filename(filename)
+        safe_filename = sanitize_filename(filename)
         destination_path = os.path.join(ref_path,safe_filename)
         
         try:
@@ -493,7 +493,7 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
 #                        )
 
                         pre_player = gr.Audio(
-                            visible=True,
+                            visible=False,
                             label="",
                             interactive=False,
                             show_label=True,
