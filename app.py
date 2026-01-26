@@ -77,7 +77,7 @@ def toggle_voice_audio(selected_file, voice_mode):
     return (
         str(file_path), 
         "⏸️ Play/Stop", 
-        gr.update(visible=True),  
+        gr.update(visible=False),  
         gr.update(value=str(file_path), autoplay=True) )  
 def sanitize_filename(filename):
     """
