@@ -23,6 +23,9 @@ loaded_models = {}
 MODEL_SIZES = ["0.6B", "1.7B"]
 REFERENCE = sorted([f for f in os.listdir("reference") if f.lower().endswith(('.wav', '.mp3'))])
 REF_DIR = os.path.join(ROOT, "reference")
+os.makedirs( os.path.join(ROOT, "custom"), exist_ok=True)
+CUSTOM_VOICE = sorted([f for f in os.listdir("custom") if f.lower().endswith(('.wav', '.mp3'))])
+CUSTOM_DIR = os.path.join(ROOT, "custom")
 def change_voice_mode(voice_mode):
     return (
         gr.update(visible=(voice_mode == "predefined")),
@@ -48,6 +51,7 @@ def read_text_for_audio(audio_path):
 def select_ref_audio(audio_path):
     return read_text_for_audio(os.path.join(REF_DIR, audio_path))
 REFERENCE_TXT = read_text_for_audio(os.path.join(REF_DIR, REFERENCE[0]))
+CUSTOM_TXT = read_text_for_audio(os.path.join(CUSTOM_DIR, CUSTOM_VOICE[0]))
 def get_model_path(model_type: str, model_size: str) -> str:
     """Get model path based on type and size."""
     return snapshot_download(f"Qwen/Qwen3-TTS-12Hz-{model_size}-{model_type}")
@@ -285,14 +289,14 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
                         with gr.Group(visible=False) as custom_group:
                             custom_ref_audio_drop = gr.Dropdown ( 
                                 label="Custom Audio",
-                                choices=REFERENCE,
-                                value=REFERENCE[0],
+                                choices=CUSTOM_VOICE,
+                                value=CUSTOM_VOICE[0],
                                 interactive=True
                             )
                             custom_ref_text_drop= gr.Textbox(
                                 label="Custom Text",
                                 lines=5,
-                                value=REFERENCE_TXT,
+                                value=CUSTOM_TXT,
                                 autoscroll=False,
                                 max_lines=5
                             )
