@@ -1,11 +1,12 @@
 # coding=utf-8
-# Qwen3-TTS Gradio Demo for HuggingFace Spaces with Zero GPU
+# Qwen3-TTS Gradio 
 # Supports: Voice Design, Voice Clone (Base), TTS (CustomVoice)
 #import subprocess
 #subprocess.run('pip install flash-attn==2.7.4.post1', shell=True)
 import os
 root = os.path.dirname(os.path.abspath(__file__))
-os.environ['HF_HOME'] = root
+os.environ["HF_HOME"] = os.path.join(root, "model")
+os.makedirs(os.environ["HF_HOME"], exist_ok=True)
 import gradio as gr
 import numpy as np
 import torch
