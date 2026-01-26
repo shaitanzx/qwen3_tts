@@ -4,6 +4,9 @@
 #import subprocess
 #subprocess.run('pip install flash-attn==2.7.4.post1', shell=True)
 import os
+import sys
+root = os.path.dirname(os.path.abspath(__file__))
+os.environ('HF_HOME')=root
 import gradio as gr
 import numpy as np
 import torch
