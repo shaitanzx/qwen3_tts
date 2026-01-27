@@ -13,9 +13,9 @@ import torch
 import shutil
 import librosa
 from huggingface_hub import snapshot_download
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+#import sys
+#from pathlib import Path
+#sys.path.insert(0, str(Path(__file__).parent.parent))
 #from huggingface_hub import login
 HF_TOKEN = os.environ.get('HF_TOKEN')
 #login(token=HF_TOKEN)

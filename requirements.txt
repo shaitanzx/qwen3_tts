@@ -3,6 +3,7 @@ torch==2.5.1
 torchvision==0.20.1
 torchaudio==2.5.1
 
+qwen_tts @ file:./qwen_tts
 # Qwen3-TTS Dependencies for HuggingFace Spaces
 transformers==4.57.3
 accelerate==1.12.0
