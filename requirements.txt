@@ -13,7 +13,7 @@ librosa
 #torchaudio
 soundfile
 sox
-onnxruntime
+onnxruntime==1.16.3
 #spaces
 torch
 numpy
