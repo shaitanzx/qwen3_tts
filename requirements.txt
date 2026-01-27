@@ -5,6 +5,7 @@ torchaudio==2.5.1
 
 qwen_tts @ file:./qwen_tts
 # Qwen3-TTS Dependencies for HuggingFace Spaces
+numpy>=1.24.0,<1.26.0
 transformers==4.57.3
 accelerate==1.12.0
 einops
