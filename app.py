@@ -180,12 +180,10 @@ def on_reference_upload(files):
         result =  upload_reference_audio_endpoint(files)
         all_files = result.get("all_reference_files", [])
         uploaded_files = result.get("uploaded_files", [])
-        print('---------------all files',all_files)
-        print('---------------uploaded_files',uploaded_files)
+
         updated_options = sorted([f for f in os.listdir("custom") if f.lower().endswith(('.wav', '.mp3'))])
         default_selection = None
         text=None
-        #print('---------------default_selection',default_selection)
         if uploaded_files:
             for file in reversed(uploaded_files):
                 if file.lower().endswith(('.wav', '.mp3')):
@@ -406,89 +404,392 @@ def post_process_gui():
                     )
             with gr.Row():
                  post_btn = gr.Button("🎵 PostProcessing",visible=True,interactive=True)
-    return post_btn, post_output, speed_factor_slider, silence_trimming, internal_silence_fix, unvoiced_removal  
+    return post_btn, post_output, speed_factor_slider, silence_trimming, internal_silence_fix, unvoiced_removal 
+
+def trim_lead_trail_silence(
+    audio_array: np.ndarray,
+    sample_rate: int,
+    silence_threshold_db: float = -40.0,
+    min_silence_duration_ms: int = 100,
+    padding_ms: int = 50,
+) -> np.ndarray:
+    """
+    Trims silence from the beginning and end of a NumPy audio array using a dB threshold.
+
+    Args:
+        audio_array: NumPy array (float32) of the audio.
+        sample_rate: Sample rate of the audio.
+        silence_threshold_db: Silence threshold in dBFS. Segments below this are considered silent.
+        min_silence_duration_ms: Minimum duration of silence to be trimmed (ms).
+        padding_ms: Padding to leave at the start/end after trimming (ms).
+
+    Returns:
+        Trimmed NumPy audio array. Returns original if no significant silence is found or on error.
+    """
+    if audio_array is None or audio_array.size == 0:
+        return audio_array
+
+    try:
+        if not LIBROSA_AVAILABLE:
+            logger.warning("Librosa not available, skipping silence trimming.")
+            return audio_array
+
+        top_db_threshold = abs(silence_threshold_db)
+
+        frame_length = 2048
+        hop_length = 512
+
+        trimmed_audio, index = librosa.effects.trim(
+            y=audio_array,
+            top_db=top_db_threshold,
+            frame_length=frame_length,
+            hop_length=hop_length,
+        )
+
+        start_sample, end_sample = index[0], index[1]
+
+        padding_samples = int((padding_ms / 1000.0) * sample_rate)
+        final_start = max(0, start_sample - padding_samples)
+        final_end = min(len(audio_array), end_sample + padding_samples)
+
+        if final_end > final_start:  # Ensure the slice is valid
+            # Check if significant trimming occurred
+            original_length = len(audio_array)
+            trimmed_length_with_padding = final_end - final_start
+            # Heuristic: if length changed by more than just padding, or if original silence was more than min_duration
+            # For simplicity, if librosa.effects.trim found *any* indices different from [0, original_length],
+            # it means some trimming potential was identified.
+            if index[0] > 0 or index[1] < original_length:
+                logger.debug(
+                    f"Silence trimmed: original samples {original_length}, new effective samples {trimmed_length_with_padding} (indices before padding: {index})"
+                )
+                return audio_array[final_start:final_end]
+
+        logger.debug(
+            "No significant leading/trailing silence found to trim, or result would be empty."
+        )
+        return audio_array
+
+    except Exception as e:
+        logger.error(f"Error during silence trimming: {e}", exc_info=True)
+        return audio_array
+
+def fix_internal_silence(
+    audio_array: np.ndarray,
+    sample_rate: int,
+    silence_threshold_db: float = -40.0,
+    min_silence_to_fix_ms: int = 700,
+    max_allowed_silence_ms: int = 300,
+) -> np.ndarray:
+    """
+    Reduces long internal silences in a NumPy audio array to a specified maximum duration.
+    Uses Librosa to split by silence.
+
+    Args:
+        audio_array: NumPy array (float32) of the audio.
+        sample_rate: Sample rate of the audio.
+        silence_threshold_db: Silence threshold in dBFS.
+        min_silence_to_fix_ms: Minimum duration of an internal silence to be shortened (ms).
+        max_allowed_silence_ms: Target maximum duration for long silences (ms).
+
+    Returns:
+        NumPy audio array with long internal silences shortened. Original if no fix needed or on error.
+    """
+    if audio_array is None or audio_array.size == 0:
+        return audio_array
+
+    try:
+        if not LIBROSA_AVAILABLE:
+            logger.warning("Librosa not available, skipping internal silence fixing.")
+            return audio_array
+
+        top_db_threshold = abs(silence_threshold_db)
+        min_silence_len_samples = int((min_silence_to_fix_ms / 1000.0) * sample_rate)
+        max_silence_samples_to_keep = int(
+            (max_allowed_silence_ms / 1000.0) * sample_rate
+        )
+
+        non_silent_intervals = librosa.effects.split(
+            y=audio_array,
+            top_db=top_db_threshold,
+            frame_length=2048,  # Can be tuned
+            hop_length=512,  # Can be tuned
+        )
+
+        if len(non_silent_intervals) <= 1:
+            logger.debug("No significant internal silences found to fix.")
+            return audio_array
+
+        fixed_audio_parts = []
+        last_nonsilent_end = 0
+
+        for i, (start_sample, end_sample) in enumerate(non_silent_intervals):
+            silence_duration_samples = start_sample - last_nonsilent_end
+            if silence_duration_samples > 0:
+                if silence_duration_samples >= min_silence_len_samples:
+                    silence_to_add = audio_array[
+                        last_nonsilent_end : last_nonsilent_end
+                        + max_silence_samples_to_keep
+                    ]
+                    fixed_audio_parts.append(silence_to_add)
+                    logger.debug(
+                        f"Shortened internal silence from {silence_duration_samples} to {max_silence_samples_to_keep} samples."
+                    )
+                else:
+                    fixed_audio_parts.append(
+                        audio_array[last_nonsilent_end:start_sample]
+                    )
+            fixed_audio_parts.append(audio_array[start_sample:end_sample])
+            last_nonsilent_end = end_sample
+
+        # Handle potential silence after the very last non-silent segment
+        # This part is tricky as librosa.effects.split only gives non-silent parts.
+        # The trim_lead_trail_silence should handle overall trailing silence.
+        # This function focuses on *between* non-silent segments.
+        if last_nonsilent_end < len(audio_array):
+            trailing_segment = audio_array[last_nonsilent_end:]
+            # Check if this trailing segment is mostly silence and long enough to shorten
+            # For simplicity, we'll assume trim_lead_trail_silence handles the very end.
+            # Or, we could append it if it's short, or shorten it if it's long silence.
+            # To avoid over-complication here, let's just append what's left.
+            # The primary goal is internal silences.
+            # However, if the last "non_silent_interval" was short and followed by a long silence,
+            # that silence needs to be handled here too.
+            silence_duration_samples = len(audio_array) - last_nonsilent_end
+            if silence_duration_samples > 0:
+                if silence_duration_samples >= min_silence_len_samples:
+                    fixed_audio_parts.append(
+                        audio_array[
+                            last_nonsilent_end : last_nonsilent_end
+                            + max_silence_samples_to_keep
+                        ]
+                    )
+                    logger.debug(
+                        f"Shortened trailing silence from {silence_duration_samples} to {max_silence_samples_to_keep} samples."
+                    )
+                else:
+                    fixed_audio_parts.append(trailing_segment)
+
+        if not fixed_audio_parts:  # Should not happen if non_silent_intervals > 1
+            logger.warning(
+                "Internal silence fixing resulted in no audio parts; returning original."
+            )
+            return audio_array
+
+        return np.concatenate(fixed_audio_parts)
+
+    except Exception as e:
+        logger.error(f"Error during internal silence fixing: {e}", exc_info=True)
+        return audio_array
+
+def remove_long_unvoiced_segments(
+    audio_array: np.ndarray,
+    sample_rate: int,
+    min_unvoiced_duration_ms: int = 300,
+    pitch_floor: float = 75.0,
+    pitch_ceiling: float = 600.0,
+) -> np.ndarray:
+    """
+    Removes segments from a NumPy audio array that are unvoiced for longer than
+    the specified duration, using Parselmouth for pitch analysis.
+
+    Args:
+        audio_array: NumPy array (float32) of the audio.
+        sample_rate: Sample rate of the audio.
+        min_unvoiced_duration_ms: Minimum duration (ms) of an unvoiced segment to be removed.
+        pitch_floor: Minimum pitch (Hz) to consider for voicing.
+        pitch_ceiling: Maximum pitch (Hz) to consider for voicing.
+
+    Returns:
+        NumPy audio array with long unvoiced segments removed. Original if Parselmouth not available or on error.
+    """
+    if not PARSELMOUTH_AVAILABLE:
+        logger.warning("Parselmouth not available, skipping unvoiced segment removal.")
+        return audio_array
+    if audio_array is None or audio_array.size == 0:
+        return audio_array
+
+    try:
+        sound = parselmouth.Sound(
+            audio_array.astype(np.float64), sampling_frequency=sample_rate
+        )
+        pitch = sound.to_pitch(pitch_floor=pitch_floor, pitch_ceiling=pitch_ceiling)
+
+        pitch_values = pitch.selected_array['frequency']
+        
+        voiced_frames = pitch_values > 0
+        
+        time_step = pitch.get_time_step()
+        start_time = pitch.get_start_time()
+        frame_times = [start_time + i * time_step for i in range(len(pitch_values))]
+        
+        segments_to_keep = []
+        current_segment_start_sample = 0
+        min_unvoiced_samples = int((min_unvoiced_duration_ms / 1000.0) * sample_rate)
+
+        i = 0
+        while i < len(voiced_frames):
+
+            is_voiced_current = voiced_frames[i]
+            
+            j = i
+            while j < len(voiced_frames) and voiced_frames[j] == is_voiced_current:
+                j += 1
+            
+            segment_start_time = frame_times[i]
+            segment_end_time = frame_times[j-1] + time_step if j < len(frame_times) else frame_times[-1] + time_step
+            
+            segment_start_sample = int(segment_start_time * sample_rate)
+            segment_end_sample = int(segment_end_time * sample_rate)
+            segment_duration_samples = segment_end_sample - segment_start_sample
+            
+            segment_start_sample = min(max(segment_start_sample, 0), len(audio_array))
+            segment_end_sample = min(max(segment_end_sample, 0), len(audio_array))
+            
+            if is_voiced_current:
+
+                if segment_start_sample < segment_end_sample:
+                    segments_to_keep.append(audio_array[segment_start_sample:segment_end_sample])
+                current_segment_start_sample = segment_end_sample
+            else:  
+                if segment_duration_samples < min_unvoiced_samples:
+                   
+                    if segment_start_sample < segment_end_sample:
+                        segments_to_keep.append(audio_array[segment_start_sample:segment_end_sample])
+                    current_segment_start_sample = segment_end_sample
+                else:
+                    
+                    logger.debug(
+                        f"Removing long unvoiced segment from {segment_start_time:.2f}s to {segment_end_time:.2f}s."
+                    )
+                    
+                    if segment_start_sample > current_segment_start_sample:
+                        segments_to_keep.append(
+                            audio_array[current_segment_start_sample:segment_start_sample]
+                        )
+                    current_segment_start_sample = segment_end_sample
+            
+            i = j  
+
+        if current_segment_start_sample < len(audio_array):
+            segments_to_keep.append(audio_array[current_segment_start_sample:])
+
+        if not segments_to_keep:
+            logger.warning(
+                "Unvoiced segment removal resulted in empty audio; returning original."
+            )
+            return audio_array
+
+        return np.concatenate(segments_to_keep)
+
+    except Exception as e:
+        logger.error(f"Error during unvoiced segment removal: {e}", exc_info=True)
+        return audio_array
+
+def apply_speed_factor(
+    audio_array: np.ndarray,
+    sample_rate: int,
+    speed_factor: float,
+    sox_path: str = "sox"):
+    """
+    Apply pitch-preserving speed change using external sox (tempo -s).
+    Works on full audio only.
+    
+    Args:
+        audio_array: numpy array with shape (samples,) for mono or (channels, samples) for multi-channel
+        sample_rate: sampling rate in Hz
+        speed_factor: speed change factor (>0). 1.0 = original speed
+        sox_path: path to sox executable
+    
+    Returns:
+        Tuple of (processed_audio_array, sample_rate)
+    """
+    # Ensure mono 1D
+    if audio_array.ndim == 2 and audio_array.shape[0] == 1:
+        audio_array = audio_array.squeeze(0)
+    elif audio_array.ndim > 1:
+        print(f"Warning: apply_speed_factor_sox_external_numpy received multi-channel audio (shape {audio_array.shape}). Using first channel only.")
+        audio_array = audio_array[0] if audio_array.ndim == 2 else audio_array[:, 0]
+
+    # Temp files
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as f_in:
+        in_path = f_in.name
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as f_out:
+        out_path = f_out.name
+
+    try:
+        # Convert numpy to tensor for torchaudio.save
+        # Ensure proper dtype (torchaudio expects float32)
+        audio_tensor = torch.from_numpy(audio_array.astype(np.float32))
+        
+        # Add channel dimension if mono (torchaudio expects shape [channels, samples])
+        if audio_tensor.ndim == 1:
+            audio_tensor = audio_tensor.unsqueeze(0)
+        
+        # Save input WAV
+        torchaudio.save(in_path, audio_tensor.cpu(), sample_rate)
+
+        # Call sox: tempo -s speed_factor
+        cmd = [
+            sox_path,
+            in_path,
+            out_path,
+            "tempo",
+            "-s",
+            str(speed_factor),
+        ]
+        subprocess.run(cmd, check=True)
+
+        # Load result using torchaudio
+        out_audio_tensor, out_sr = torchaudio.load(out_path)
+        
+        # Convert back to numpy
+        out_audio_array = out_audio_tensor.numpy()
+        
+        # Squeeze channel dimension if mono
+        if out_audio_array.shape[0] == 1:
+            out_audio_array = out_audio_array.squeeze(0)
+        
+        return out_audio_array.astype(np.float32), out_sr
+
+    except Exception as e:
+        print(f"Error: External sox tempo failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return audio_array, sample_rate
+
+    finally:
+        # Cleanup temp files
+        for p in (in_path, out_path):
+            try:
+                os.remove(p)
+            except Exception:
+                pass
+
+
 def postprocess(audio_file,speed_factor_slider, silence_trimming, internal_silence_fix, unvoiced_removal):
         speed_factor = float (speed_factor)
-        audio_data, engine_output_sample_rate = librosa.load(audio_file, sr=None)
-        config_audio_output_sample_rate = int (config_audio_output_sample_rate)
+        sr, audio_data = audio_data
         if silence_trimming:
-            audio_data = utils.trim_lead_trail_silence(
+            audio_data = trim_lead_trail_silence(
                 audio_data, engine_output_sample_rate
             )
         
         if internal_silence_fix:
-            audio_data = utils.fix_internal_silence(
+            audio_data = fix_internal_silence(
                 audio_data, engine_output_sample_rate
             )
 
         if unvoiced_removal:
-            audio_data = utils.remove_long_unvoiced_segments(
+            audio_data = remove_long_unvoiced_segments(
                 audio_data, engine_output_sample_rate
             )
 
         if speed_factor != 1.0:
-            output_format_str = output_format if output_format else get_audio_output_format()
-            if config_audio_output_sample_rate is not None:
-                final_output_sample_rate = config_audio_output_sample_rate
-            else:
-                final_output_sample_rate = get_audio_sample_rate()
-            
-            encoded_audio_bytes = utils.encode_audio(
-                audio_array=audio_data,
-                sample_rate=engine_output_sample_rate,
-                output_format=output_format_str,
-                target_sample_rate=final_output_sample_rate,
-                )
-        
-            if encoded_audio_bytes is None:
-                return None, None, gr.update (visible=True)
-        
-            outputs_dir = get_output_path(ensure_absolute=True)
-            outputs_dir.mkdir(parents=True, exist_ok=True)
-    
-            timestamp_str = time.strftime("%Y%m%d_%H%M%S")
-            suggested_filename_base = audio_name or f"tts_output_{timestamp_str}"
-            file_name_temp = utils.sanitize_filename(f"{suggested_filename_base}_temp.{output_format_str}")
-            file_name = utils.sanitize_filename(f"{suggested_filename_base}_post.{output_format_str}")
-            file_path_temp = outputs_dir / file_name_temp
-            file_path = outputs_dir / file_name
+            audio_data = apply_speed_factor(audio_ata, engine_output_sample_rate)
 
-            with open(file_path_temp, "wb") as f:
-                f.write(encoded_audio_bytes)
 
-            os.system(f"ffmpeg -i {str(file_path_temp)} -filter:a atempo=\"{str(speed_factor)}\" {str(file_path)}")
-
-            os.remove(file_path_temp)
-            return file_path
-        else:
-            output_format_str = output_format if output_format else get_audio_output_format()
-            if config_audio_output_sample_rate is not None:
-                final_output_sample_rate = config_audio_output_sample_rate
-            else:
-                final_output_sample_rate = get_audio_sample_rate()
-    
-            encoded_audio_bytes = utils.encode_audio(
-                audio_array=audio_data,
-                sample_rate=engine_output_sample_rate,
-                output_format=output_format_str,
-                target_sample_rate=final_output_sample_rate,
-                )
-        
-            if encoded_audio_bytes is None:
-                return None, None, gr.update (visible=True)
-        
-            outputs_dir = get_output_path(ensure_absolute=True)
-            outputs_dir.mkdir(parents=True, exist_ok=True)
-    
-            timestamp_str = time.strftime("%Y%m%d_%H%M%S")
-            suggested_filename_base = audio_name or f"tts_output_{timestamp_str}"
-            file_name = utils.sanitize_filename(f"{suggested_filename_base}_post.{output_format_str}")
-            file_path = outputs_dir / file_name
-        
-            with open(file_path, "wb") as f:
-                f.write(encoded_audio_bytes)
-
-        return file_path   
+        return {"sampling_rate": engine_output_sample_rate, "data": audio_data}   
 # Build Gradio UI
 def build_ui():
     theme = gr.themes.Soft(
