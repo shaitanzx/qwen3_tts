@@ -872,7 +872,6 @@ def remove_long_unvoiced_segments(
 def postprocess(audio_file,speed_factor, silence_trimming, internal_silence_fix, unvoiced_removal):
         speed_factor = float (speed_factor)
         audio_data, engine_output_sample_rate = librosa.load(audio_file, sr=None)
-        sr, audio_data = audio_data
         if silence_trimming:
             audio_data = trim_lead_trail_silence(
                 audio_data, engine_output_sample_rate
