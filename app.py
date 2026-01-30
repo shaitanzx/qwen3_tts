@@ -443,6 +443,7 @@ def generate_voice_design(text, language, voice_description):
         return None, "Error: Voice description is required."
 
     try:
+        start_time = time.time()
         tts = get_model("VoiceDesign", "1.7B")
         wavs, sr = tts.generate_voice_design(
             text=text.strip(),
