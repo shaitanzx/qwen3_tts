@@ -1151,7 +1151,7 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
                     inputs=[voice_mode_radio, clone_ref_audio_drop, clone_ref_text_drop, clone_xvector,  
                             custom_ref_audio_drop, custom_ref_text_drop, custom_xvector, clone_target_text, clone_language, clone_model_size],
                     outputs=[clone_audio_out, clone_status]) \
-                    .then.then(lambda: (gr.update(interactive=True),gr.update(visible=True)),outputs=[clone_btn,clone_audio_out])
+                    .then(lambda: (gr.update(interactive=True),gr.update(visible=True)),outputs=[clone_btn,clone_audio_out])
                 post_btn_vc.click(lambda: (gr.update(interactive=False)),outputs=[post_btn_vc]) \
                     .then(postprocess,inputs=[clone_audio_out,speed_factor_slider_vc, silence_trimming_vc, internal_silence_fix_vc, unvoiced_removal_vc],outputs=[post_output_vc]) \
                     .then(lambda: (gr.update(interactive=True),gr.update(visible=True)),outputs=[post_btn_vc,post_output_vc])
