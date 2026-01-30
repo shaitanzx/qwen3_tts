@@ -982,7 +982,7 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
 
                     with gr.Column(scale=2):
                         #design_audio_out = gr.Audio(label="Generated Audio", type="numpy")
-                        design_audio_out = gr.Audio(label="Generated Audio", interactive=True,visible=False,show_download_button=True)
+                        design_audio_out = gr.Audio(label="Generated Audio", type="filepath",interactive=True,visible=False,show_download_button=True)
                         design_status = gr.Textbox(label="Status", lines=2, interactive=False)
                 with gr.Row():
                     design_btn = gr.Button("Generate with Custom Voice", variant="primary")
