@@ -356,7 +356,6 @@ def encode_audio(audio_array,sample_rate,output_format,target_sample_rate):
 
     start_time = time.time()
     output_buffer = io.BytesIO()
-    print("________________________")
     try:
         audio_to_write = audio_array
         rate_to_write = sample_rate
@@ -419,7 +418,7 @@ def encode_audio(audio_array,sample_rate,output_format,target_sample_rate):
             #    f"Unsupported output format requested for encoding: {output_format}"
             #)
             return None,f"Unsupported output format requested for encoding: {output_format}"
-        print("------------------------------------")
+
         encoded_bytes = output_buffer.getvalue()
         end_time = time.time()
         print(
@@ -468,7 +467,7 @@ def generate_voice_design(text, language, voice_description):
         timestamp_str = time.strftime("%Y%m%d_%H%M%S")
         suggested_filename_base = f"qwen3_output_{timestamp_str}"
         file_name = f"{suggested_filename_base}.wav"
-        file_path = OUTPUT_DIR / file_name
+        file_path = os.path.join(OUTPUT_DIR, file_name)
         
         with open(file_path, "wb") as f:
             f.write(encoded_audio_bytes)
