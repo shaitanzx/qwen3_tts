@@ -186,28 +186,26 @@ def on_reference_upload(files):
         default_selection = uploaded_files[0] if uploaded_files else "none"
         text=None
         #print('---------------default_selection',default_selection)
-        if uploaded_files:
+        if upload_files:
             for file in reversed(uploaded_files):
                 if file.lower().endswith(('.wav', '.mp3')):
                     default_selection = file
                     break
-
-            if not default_selection:
-                base_name = os.path.splitext(uploaded_files[-1])[0]  # Убираем расширение
-                # Ищем файл с тем же именем, но с расширением .wav или .mp3
+            if default_selection:
+                return gr.update(choices=updated_options,value=default_selection),gr.update(value=select_custom_audio(default_selection))
+            else:
+                base_name = os.path.splitext(uploaded_files[-1])[0]
                 for ext in ('.wav', '.mp3'):
                     audio_file = f"{base_name}{ext}"
                     if audio_file in all_files:
                         default_selection = audio_file
                         break
-                if default_selection==None:
-                    return gr.update(),gr.update()
+                if default_selection:
+                    return gr.update(choices=updated_options,value=default_selection),gr.update(value=select_custom_audio(default_selection))
                 else:
-                    return gr.update(choices=updated_options,value=default_selection),gr.update(value=select_custom_audio(audio_file))
-            else:
-                return gr.update(choices=updated_options,value=default_selection),gr.update(value=select_custom_audio(default_selectionh))
-        else:
-            return gr.update(choices=all_files)
+                    return gr.update(),gr.update()   
+        else:         
+            return gr.update(),return gr.update()
             
     except Exception as e:
         print(f"Error in reference upload: {e}", exc_info=True)
