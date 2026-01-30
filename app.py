@@ -17,6 +17,7 @@ import argparse
 import time
 import io
 import soundfile as sf
+import subprocess
 #import sys
 #from pathlib import Path
 #sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -868,89 +869,9 @@ def remove_long_unvoiced_segments(
         print(f"Error during unvoiced segment removal: {e}")
         return audio_array
 
-def apply_speed_factor(
-    audio_array: np.ndarray,
-    sample_rate: int,
-    speed_factor: float,
-    sox_path: str = "sox"):
-    """
-    Apply pitch-preserving speed change using external sox (tempo -s).
-    Works on full audio only.
-    
-    Args:
-        audio_array: numpy array with shape (samples,) for mono or (channels, samples) for multi-channel
-        sample_rate: sampling rate in Hz
-        speed_factor: speed change factor (>0). 1.0 = original speed
-        sox_path: path to sox executable
-    
-    Returns:
-        Tuple of (processed_audio_array, sample_rate)
-    """
-    # Ensure mono 1D
-    if audio_array.ndim == 2 and audio_array.shape[0] == 1:
-        audio_array = audio_array.squeeze(0)
-    elif audio_array.ndim > 1:
-        print(f"Warning: apply_speed_factor_sox_external_numpy received multi-channel audio (shape {audio_array.shape}). Using first channel only.")
-        audio_array = audio_array[0] if audio_array.ndim == 2 else audio_array[:, 0]
-
-    # Temp files
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as f_in:
-        in_path = f_in.name
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as f_out:
-        out_path = f_out.name
-
-    try:
-        # Convert numpy to tensor for torchaudio.save
-        # Ensure proper dtype (torchaudio expects float32)
-        audio_tensor = torch.from_numpy(audio_array.astype(np.float32))
-        
-        # Add channel dimension if mono (torchaudio expects shape [channels, samples])
-        if audio_tensor.ndim == 1:
-            audio_tensor = audio_tensor.unsqueeze(0)
-        
-        # Save input WAV
-        torchaudio.save(in_path, audio_tensor.cpu(), sample_rate)
-
-        # Call sox: tempo -s speed_factor
-        cmd = [
-            sox_path,
-            in_path,
-            out_path,
-            "tempo",
-            "-s",
-            str(speed_factor),
-        ]
-        subprocess.run(cmd, check=True)
-
-        # Load result using torchaudio
-        out_audio_tensor, out_sr = torchaudio.load(out_path)
-        
-        # Convert back to numpy
-        out_audio_array = out_audio_tensor.numpy()
-        
-        # Squeeze channel dimension if mono
-        if out_audio_array.shape[0] == 1:
-            out_audio_array = out_audio_array.squeeze(0)
-        
-        return out_audio_array.astype(np.float32), out_sr
-
-    except Exception as e:
-        print(f"Error: External sox tempo failed: {e}")
-        import traceback
-        traceback.print_exc()
-        return audio_array, sample_rate
-
-    finally:
-        # Cleanup temp files
-        for p in (in_path, out_path):
-            try:
-                os.remove(p)
-            except Exception:
-                pass
-
-
 def postprocess(audio_file,speed_factor_slider, silence_trimming, internal_silence_fix, unvoiced_removal):
         speed_factor = float (speed_factor)
+        audio_data, engine_output_sample_rate = librosa.load(audio_file, sr=None)
         sr, audio_data = audio_data
         if silence_trimming:
             audio_data = trim_lead_trail_silence(
@@ -968,7 +889,43 @@ def postprocess(audio_file,speed_factor_slider, silence_trimming, internal_silen
             )
 
         if speed_factor != 1.0:
-            audio_data = apply_speed_factor(audio_ata, engine_output_sample_rate)
+            encoded_audio_bytes = encode_audio(
+                audio_array=audio_data,
+                sample_rate=engine_output_sample_rate,
+                output_format="wav",
+                target_sample_rate=engine_output_sample_rate,
+                )
+            timestamp_str = time.strftime("%Y%m%d_%H%M%S")
+            file_name_temp = "_temp.wav"
+            file_path_temp = os.path.join(OUTPUT_DIR, file_name_temp)
+            with open(file_path_temp, "wb") as f:
+                f.write(encoded_audio_bytes)
+    
+            suggested_filename_base = f"qwen3_post_{timestamp_str}"
+            file_name = f"{suggested_filename_base}.wav"
+            file_path = os.path.join(OUTPUT_DIR, file_name)
+
+        # Call sox: tempo -s speed_factor
+            cmd = ["sox",file_path_temp,file_path,"tempo","-s",str(speed_factor)]
+            subprocess.run(cmd, check=True)
+            os.remove(file_path_temp)
+        else:
+            encoded_audio_bytes = encode_audio(
+                audio_array=audio_data,
+                sample_rate=engine_output_sample_rate,
+                output_format="wav",
+                target_sample_rate=engine_output_sample_rate,
+                )
+            timestamp_str = time.strftime("%Y%m%d_%H%M%S")
+            suggested_filename_base = f"qwen3_post_{timestamp_str}"
+            file_name = f"{suggested_filename_base}.wav"
+            file_path = os.path.join(OUTPUT_DIR, file_name)
+            with open(file_path, "wb") as f:
+                f.write(encoded_audio_bytes)
+
+        return file_path
+
+        return file_path
 
 
         return {"sampling_rate": engine_output_sample_rate, "data": audio_data}   
