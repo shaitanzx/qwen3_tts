@@ -403,8 +403,8 @@ def post_process_gui():
                     value=False,
                     interactive=True
                     )
-    with gr.Row():
-        post_btn = gr.Button("🎵 PostProcessing",visible=True)
+            with gr.Row():
+                 post_btn = gr.Button("🎵 PostProcessing",visible=True)
     return post_btn, post_output, speed_factor_slider, silence_trimming, internal_silence_fix, unvoiced_removal     
 # Build Gradio UI
 def build_ui():
