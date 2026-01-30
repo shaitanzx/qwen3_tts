@@ -210,7 +210,7 @@ def on_reference_upload(files):
             return gr.update(), gr.update()
             
     except Exception as e:
-        print(f"Error in reference upload: {e}", exc_info=True)
+        print(f"Error in reference upload: {e}")
         return sorted([f for f in os.listdir("custom") if f.lower().endswith(('.wav', '.mp3'))]) or [""]
 
 def get_model_path(model_type: str, model_size: str) -> str:
@@ -346,7 +346,6 @@ def encode_audio(audio_array,sample_rate,output_format,target_sample_rate):
         except Exception as e_resample:
             print(
                 f"Error resampling audio to {target_sample_rate}Hz: {e_resample}. Proceeding with original sample rate {sample_rate}.",
-                exc_info=True,
             )
     elif target_sample_rate is not None and target_sample_rate != sample_rate:
         print(
@@ -434,7 +433,7 @@ def encode_audio(audio_array,sample_rate,output_format,target_sample_rate):
         )
         return None
     except Exception as e:
-        print(f"Error encoding audio to '{output_format}': {e}", exc_info=True)
+        print(f"Error encoding audio to '{output_format}': {e}")
         return None
 def generate_voice_design(text, language, voice_description):
     """Generate speech using Voice Design model (1.7B only)."""
@@ -653,7 +652,7 @@ def trim_lead_trail_silence(
         return audio_array
 
     except Exception as e:
-        print(f"Error during silence trimming: {e}", exc_info=True)
+        print(f"Error during silence trimming: {e}")
         return audio_array
 
 def fix_internal_silence(
@@ -761,7 +760,7 @@ def fix_internal_silence(
         return np.concatenate(fixed_audio_parts)
 
     except Exception as e:
-        print(f"Error during internal silence fixing: {e}", exc_info=True)
+        print(f"Error during internal silence fixing: {e}")
         return audio_array
 
 def remove_long_unvoiced_segments(
@@ -865,7 +864,7 @@ def remove_long_unvoiced_segments(
         return np.concatenate(segments_to_keep)
 
     except Exception as e:
-        print(f"Error during unvoiced segment removal: {e}", exc_info=True)
+        print(f"Error during unvoiced segment removal: {e}")
         return audio_array
 
 def apply_speed_factor(
