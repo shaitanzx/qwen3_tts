@@ -186,7 +186,7 @@ def on_reference_upload(files):
         default_selection = uploaded_files[0] if uploaded_files else "none"
         text=None
         #print('---------------default_selection',default_selection)
-        if upload_files:
+        if uploaded_files:
             for file in reversed(uploaded_files):
                 if file.lower().endswith(('.wav', '.mp3')):
                     default_selection = file
