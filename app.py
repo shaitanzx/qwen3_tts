@@ -1031,16 +1031,17 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
 
                     with gr.Column(scale=2):
                         #design_audio_out = gr.Audio(label="Generated Audio", type="numpy")
-                        design_audio_out = gr.Audio(label="Generated Audio", interactive=True,visible=True,show_download_button=True)
+                        design_audio_out = gr.Audio(label="Generated Audio", interactive=True,visible=False,show_download_button=True)
                         design_status = gr.Textbox(label="Status", lines=2, interactive=False)
-                        design_btn = gr.Button("Generate with Custom Voice", variant="primary")
+                with gr.Row():
+                    design_btn = gr.Button("Generate with Custom Voice", variant="primary")
                 post_btn, post_output, speed_factor_slider, silence_trimming, internal_silence_fix, unvoiced_removal = post_process_gui()               
                 design_btn.click(lambda: (gr.update(interactive=False)),outputs=[design_btn]) \
                     .then(
                     generate_voice_design,
                     inputs=[design_text, design_language, design_instruct],
                     outputs=[design_audio_out, design_status]) \
-                    .then(lambda: (gr.update(interactive=True)),outputs=[design_btn])
+                    .then(lambda: (gr.update(interactive=True),gr.update(visible=True)),outputs=[design_btn,design_audio_out])
                 post_btn.click(lambda: (gr.update(interactive=False)),outputs=[post_btn]) \
                     .then(postprocess,inputs=[design_audio_out,speed_factor_slider, silence_trimming, internal_silence_fix, unvoiced_removal],outputs=[post_output]) \
                     .then(lambda: (gr.update(interactive=True)),outputs=[post_btn])
