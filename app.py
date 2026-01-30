@@ -905,9 +905,8 @@ def postprocess(audio_file,speed_factor_slider, silence_trimming, internal_silen
             file_name = f"{suggested_filename_base}.wav"
             file_path = os.path.join(OUTPUT_DIR, file_name)
 
-        # Call sox: tempo -s speed_factor
-            cmd = ["sox",file_path_temp,file_path,"tempo","-s",str(speed_factor)]
-            subprocess.run(cmd, check=True)
+            os.system(f"sox {file_path_temp} {file_path} tempo -s {str(speed_factor)}")
+
             os.remove(file_path_temp)
         else:
             encoded_audio_bytes = encode_audio(
@@ -924,11 +923,7 @@ def postprocess(audio_file,speed_factor_slider, silence_trimming, internal_silen
                 f.write(encoded_audio_bytes)
 
         return file_path
-
-        return file_path
-
-
-        return {"sampling_rate": engine_output_sample_rate, "data": audio_data}   
+ 
 # Build Gradio UI
 def build_ui():
     theme = gr.themes.Soft(
