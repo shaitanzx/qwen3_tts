@@ -542,21 +542,6 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
                             outputs=[clone_ref_text_drop]
                             )  
 
-
-         
-#                        clone_ref_audio = gr.Audio(
-#                            label="Reference Audio (Upload a voice sample to clone)",
-#                            type="numpy",
-#                        )
-#                        clone_ref_text = gr.Textbox(
-#                            label="Reference Text (Transcript of the reference audio)",
-#                            lines=2,
-#                            placeholder="Enter the exact text spoken in the reference audio...",
-#                        )
-#                        clone_xvector = gr.Checkbox(
-#                            label="Use x-vector only (No reference text needed, but lower quality)",
-#                            value=False,
-#                        )
                         with gr.Row(elem_id="audio-player-container"):
                             pre_player = gr.Audio(
                                 visible=True,
@@ -609,7 +594,7 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
                 with gr.Row():
                     clone_audio_out = gr.Audio(label="Generated Audio", type="numpy")
                     clone_status = gr.Textbox(label="Status", lines=2, interactive=False)
-
+                post_btn_vc, post_output_vc, speed_factor_slider_vc, silence_trimming_vc, internal_silence_fix_vc, unvoiced_removal_vc = post_process_gui()    
                 clone_btn.click(
                     generate_voice_clone,
                     inputs=[voice_mode_radio, clone_ref_audio_drop, clone_ref_text_drop, clone_xvector,  
@@ -653,12 +638,13 @@ Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team
                                 value="1.7B",
                                 interactive=True,
                             )
-                        tts_btn = gr.Button("Generate Speech", variant="primary")
+                        
 
                     with gr.Column(scale=2):
                         tts_audio_out = gr.Audio(label="Generated Audio", type="numpy")
                         tts_status = gr.Textbox(label="Status", lines=2, interactive=False)
-
+                        tts_btn = gr.Button("Generate Speech", variant="primary")
+                post_btn_tts, post_output_tts, speed_factor_slider_tts, silence_trimming_tts, internal_silence_fix_tts, unvoiced_removal_tts = post_process_gui()    
                 tts_btn.click(
                     generate_custom_voice,
                     inputs=[tts_text, tts_language, tts_speaker, tts_instruct, tts_model_size],
