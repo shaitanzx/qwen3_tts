@@ -181,7 +181,7 @@ def on_reference_upload(files):
         all_files = result.get("all_reference_files", [])
         uploaded_files = result.get("uploaded_files", [])
         print('---------------all files',all_files)
-        print('---------------updated_options',updated_options)
+        print('---------------uploaded_files',uploaded_files)
         #print('---------------default_selection',default_selection)
         if uploaded_files:
             default_selection = uploaded_files[0] if uploaded_files else "none"
