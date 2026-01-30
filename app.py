@@ -184,7 +184,9 @@ def on_reference_upload(files):
         if uploaded_files:
             default_selection = uploaded_files[0] if uploaded_files else "none"
             updated_options = all_files
-            
+            print('---------------all files',all_files)
+            print('---------------updated_options',updated_options)
+            print('---------------default_selection',default_selection)
             return gr.update(choices=updated_options,value=default_selection)
         else:
             return gr.update(choices=all_files)
