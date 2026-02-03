@@ -1,10 +1,11 @@
 import os
 import sys
-from launch_util import is_installed, run, python, run_pip, requirements_met, delete_folder_content
-
 root = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(root)
 os.chdir(root)
+from launch_util import is_installed, run, python, run_pip, requirements_met, delete_folder_content
+
+
 
 
 try:
