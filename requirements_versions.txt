@@ -1,4 +1,4 @@
-numpy==1.26.3
+
 transformers==4.57.3
 accelerate==1.12.0
 einops
@@ -7,6 +7,6 @@ librosa
 soundfile
 praat-parselmouth
 sox
-onnxruntime==1.17.0
+onnxruntime==1.18.0
 
 qwen-tts
