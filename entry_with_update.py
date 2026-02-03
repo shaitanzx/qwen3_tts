@@ -68,15 +68,4 @@ def install_requirements(requirements_file):
 if not requirements_met(requirements_file):
         install_requirements(requirements_file)
 
-from app import build_ui, parse_args
-    
-args = parse_args()
-demo = build_ui()
-    
-    # Критически важно: запустить интерфейс!
-demo.launch(
-        share=args.share,
-        inbrowser=not args.share,
-        server_name="0.0.0.0" if args.listen else "127.0.0.1",
-        server_port=args.port
-    )
+from app import *
