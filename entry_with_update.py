@@ -1,6 +1,6 @@
 import os
 import sys
-
+from launch_util import is_installed, run, python, run_pip, requirements_met, delete_folder_content
 
 root = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(root)
@@ -46,4 +46,25 @@ except Exception as e:
     print(str(e))
 
 print('Update succeeded.')
+
+
+torch_index_url = os.environ.get('TORCH_INDEX_URL', "https://download.pytorch.org/whl/cu121")
+torch_command = os.environ.get('TORCH_COMMAND',
+                                   f"pip install torch==2.5.1+cu121 torchvision==0.20.1+cu121 torchaudio==2.5.1+cu121 --extra-index-url {torch_index_url}")
+requirements_file = os.environ.get('REQS_FILE', "requirements_versions.txt")
+
+print(f"Python {sys.version}")
+#print(f"Fooocus version: {fooocus_version.version}")
+
+if not is_installed("torch") or not is_installed("torchvision") or not is_installed("torchaudio"):
+        run(f'"{python}" -m {torch_command}', "Installing torch and torchvision", "Couldn't install torch", live=True)
+
+def install_requirements(requirements_file):
+    with open(requirements_file, 'r', encoding='utf-8') as file:
+        for line in file:
+            line = line.strip()
+            if line and not line.startswith('#'):  # Игнорируем пустые строки и комментарии
+                run_pip(f"install {line}", desc=line)
+if not requirements_met(requirements_file):
+        install_requirements(requirements_file)
 
