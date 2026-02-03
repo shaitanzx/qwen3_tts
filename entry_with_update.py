@@ -58,7 +58,7 @@ print(f"Python {sys.version}")
 #print(f"Fooocus version: {fooocus_version.version}")
 
 if not is_installed("torch") or not is_installed("torchvision") or not is_installed("torchaudio"):
-        run(f'"{python}" -m {torch_command}', "Installing torch and torchvision", "Couldn't install torch", live=True)
+        run(f'"{python}" -m {torch_command}', "Installing torch, torchvision and torchaudio", "Couldn't install torch", live=True)
 
 def install_requirements(requirements_file):
     with open(requirements_file, 'r', encoding='utf-8') as file:
