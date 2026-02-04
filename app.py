@@ -1006,16 +1006,17 @@ with shared.gradio_root as demo:
         )
         gr.Markdown(
             """
-# Qwen3-TTS Demo
+# 🎤 Qwen3-TTS Demo
 
 A unified Text-to-Speech demo featuring three powerful modes:
 - **Voice Design**: Create custom voices using natural language descriptions
 - **Voice Clone (Base)**: Clone any voice from a reference audio
 - **TTS (CustomVoice)**: Generate speech with predefined speakers and optional style instructions
 
-Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team.
+Repack by Shahmatist^RMDA. Built with [Qwen3-TTS](https://github.com/QwenLM/Qwen3-TTS) by Alibaba Qwen Team.
 """
         )
+        gr.HTML('<p>* Disclaimer: All voice examples are taken from open sources and are presented with respect to their users and for demonstration purposes only. For commercial use, we recommend contacting the authors. Unauthorized use of other people\'s voices for commercial purposes and without permission not only violates the rights of their owners but may also be prosecuted. We strictly prohibit, condemn, and assume no liability for the use of this technology to violate anyone\'s rights or commit illegal acts!</p><p>* All suggestions and questions can be voiced in the <a href="https://t.me/+xlhhGmrz9SlmYzg6" target="_blank">Telegram-group</a></p>')
 
         with gr.Tabs():
             # Tab 1: Voice Design (Default, 1.7B only)
