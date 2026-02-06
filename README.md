@@ -155,19 +155,9 @@ For `Qwen3-TTS-12Hz-1.7B/0.6B-CustomVoice` models, the supported speaker list an
 After generation in each of the modes, you can additionally run the post-processing process -  removing non-voice sections at the end, middle, and throughout the generated voice, as well as selecting a speed change factor
 
 
-For local use on Windows, you can download the following packages:
-- for CPU only - https://github.com/shaitanzx/chatterbox_vc_mtl/releases/download/Chatterbox/chatterbox_cpu.7z
-- for Nvidia GPU 10xx-40xx - https://github.com/shaitanzx/chatterbox_vc_mtl/releases/download/Chatterbox_Nv/chatterbox_nvidia.7z
-- for Nvidia GPU 50xx (Be sure to download both files) - https://github.com/shaitanzx/chatterbox_vc_mtl/releases/download/Chatterbox_Nv50xx/chatterbox_nv50xx.7z.001
-
-    and
-
-  https://github.com/shaitanzx/chatterbox_vc_mtl/releases/download/Chatterbox_Nv50xx/chatterbox_nv50xx.7z.002
-
-
 <table>
   <tr>
-    <td><a href="https://colab.research.google.com/github/shaitanzx/chatterbox_vc_mtl/blob/main/chatterbox_vc_mtl.ipynb" rel="nofollow"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" data-canonical-src="https://colab.research.google.com/assets/colab-badge.svg"></a></td><td>Chatterbox_vc_mtl in Google Colab</td>
+    <td><a href="https://colab.research.google.com/github/shaitanzx/qwen3_tts/blob/main/qwen3_colab.ipynb" rel="nofollow"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" data-canonical-src="https://colab.research.google.com/assets/colab-badge.svg"></a></td><td>Chatterbox_vc_mtl in Google Colab</td>
   </tr>
 </table>
 
