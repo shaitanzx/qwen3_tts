@@ -154,6 +154,11 @@ For `Qwen3-TTS-12Hz-1.7B/0.6B-CustomVoice` models, the supported speaker list an
 
 After generation in each of the modes, you can additionally run the post-processing process -  removing non-voice sections at the end, middle, and throughout the generated voice, as well as selecting a speed change factor
 
+**Local launch**
+
+To launch, click run.bat
+
+If you have an Nvidia 50xx graphics card, before the first launch, run install_for_nv50xx.bat to download and install modules for your graphics card.
 
 <table>
   <tr>
