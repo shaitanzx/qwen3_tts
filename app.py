@@ -22,10 +22,7 @@ import time
 import io
 import soundfile as sf
 import subprocess
-#import sys
-#from pathlib import Path
-#sys.path.insert(0, str(Path(__file__).parent.parent))
-#from huggingface_hub import login
+
 HF_TOKEN = os.environ.get('HF_TOKEN')
 #login(token=HF_TOKEN)
 # Global model holders - keyed by (model_type, model_size)
@@ -41,10 +38,6 @@ CUSTOM_DIR = os.path.join(ROOT, "custom")
 OUTPUT_DIR = os.path.join(ROOT, "output")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 def get_device() -> torch.device:
-    """
-    Автоматически определяет доступное устройство:
-    CUDA → MPS → CPU (в порядке проверки)
-    """
     if torch.cuda.is_available():
         return torch.device("cuda")
     if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
@@ -57,10 +50,6 @@ def change_voice_mode(voice_mode):
         gr.update(visible=(voice_mode == "custom"))
     )
 def read_text_for_audio(audio_path):
-    """
-    Ищет файл с тем же именем, что и audio_path, но с расширением .txt или .lab.
-    Возвращает содержимое первого найденного файла или пустую строку.
-    """
     base = os.path.splitext(audio_path)[0]
     for ext in ['.txt', '.lab']:
         text_path = base + ext
@@ -503,6 +492,9 @@ def generate_voice_design(text, language, voice_description):
 
 def generate_voice_clone(voice_mode_radio, clone_ref_audio_drop, clone_ref_text_drop, clone_xvector,  
         custom_ref_audio_drop, custom_ref_text_drop,custom_xvector,target_text, language, model_size):
+
+
+    print ('-----------------------',target_text)
     if voice_mode_radio == 'predefined':
         audio=clone_ref_audio_drop
         ref_text=clone_ref_text_drop
